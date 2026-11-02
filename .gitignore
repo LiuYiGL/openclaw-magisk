@@ -1,0 +1,17 @@
+# Build artifacts
+release/
+.cache/
+module/payload/
+
+# Scratch and research files
+.research/
+
+# Logs
+*.log
+KernelSU_install_log_*.log
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

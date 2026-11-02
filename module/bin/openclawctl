@@ -1,0 +1,67 @@
+#!/system/bin/sh
+# OpenClaw Magisk module control script. Run as root:
+#   openclawctl start|stop|restart|status|url|token|logs|provision|update|lan
+BIN_DIR=${0%/*}
+. "$BIN_DIR/common.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: openclawctl <command>
+
+  start            Start the Gateway now
+  stop             Stop the Gateway
+  restart          Restart the Gateway
+  status           Show Gateway state, URL and token
+  url              Print the local Control UI URL
+  open             Print the URL including the auth token (tap it to open)
+  token            Print the Gateway auth token
+  logs [N]         Show the last N lines of the Gateway log
+  provision        Download and install the runtime (first boot does this too)
+  update           Update OpenClaw to the latest npm release
+  patch            Re-apply the Android PID namespace patch
+  lan on|off       Bind to the Wi-Fi interface (LAN access) or loopback only
+  shell            Open a bash shell inside the Linux rootfs
+EOF
+}
+
+case "${1:-status}" in
+  start) "$BIN_DIR/start.sh" ;;
+  stop) "$BIN_DIR/stop.sh" ;;
+  restart) "$BIN_DIR/stop.sh"; "$BIN_DIR/start.sh" ;;
+  status)
+    if is_running; then echo "status: running"; else echo "status: stopped"; fi
+    echo "url: http://127.0.0.1:$PORT/"
+    echo "token: $(cat "$TOKEN_FILE" 2>/dev/null)"
+    ip=$(lan_ip)
+    [ -n "$ip" ] && echo "wifi: http://$ip:$PORT/ (after 'openclawctl lan on')"
+    ;;
+  url) echo "http://127.0.0.1:$PORT/" ;;
+  open) echo "http://127.0.0.1:$PORT/#token=$(cat "$TOKEN_FILE" 2>/dev/null)" ;;
+  token) cat "$TOKEN_FILE" 2>/dev/null ;;
+  logs) tail -n "${2:-80}" "$LOGS/gateway.log" ;;
+  provision) "$BIN_DIR/provision.sh" ;;
+  update) "$BIN_DIR/update.sh" ;;
+  patch) "$BIN_DIR/patch-openclaw.sh" ;;
+  lan)
+    case "$2" in
+      on)
+        sed -i 's/"bind": *"[a-zA-Z]*"/"bind": "lan"/' "$CONFIG"
+        "$BIN_DIR/stop.sh"; "$BIN_DIR/start.sh"
+        ip=$(lan_ip)
+        echo "LAN URL: http://${ip:-<wifi-ip>}:$PORT/"
+        echo "Token:   $(cat "$TOKEN_FILE" 2>/dev/null)"
+        ;;
+      off)
+        sed -i 's/"bind": *"[a-zA-Z]*"/"bind": "loopback"/' "$CONFIG"
+        "$BIN_DIR/stop.sh"; "$BIN_DIR/start.sh"
+        echo "Loopback URL: http://127.0.0.1:$PORT/"
+        ;;
+      *) echo "usage: openclawctl lan on|off"; exit 1 ;;
+    esac
+    ;;
+  shell)
+    mounts_up
+    chroot_cmd /bin/bash
+    ;;
+  *) usage; exit 1 ;;
+esac
