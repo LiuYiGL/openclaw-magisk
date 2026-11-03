@@ -12,6 +12,7 @@
 
 ## 更新日志
 
+- **1.3.1**：安装完成后先解析 `https://dwz.liuyi.publicvm.com/openclaw-pocket` 的重定向目标，再打开目标链接；新增 `action.sh`，在 Magisk/KernelSU/APatch 模块页显示“操作”按钮，用于启动服务并打开面板。
 - **1.3.0**：模块 ID 改为 `openclaw-pocket`，作者改为 `Liuyi`；安装目录相应变为 `/data/adb/modules/openclaw-pocket`。
 - **1.2.1**：卸载模块时自动删除 `/data/openclaw` 与 token 文件；安装完成后自动打开项目页。
 - **1.2.0**：不再裁剪 OpenClaw 本体，恢复完整 npm 安装（文档、工作区模板、类型声明、各平台预编译），仍保持离线运行时（zip 约 168 MB）。
@@ -27,7 +28,7 @@
 
 ## 安装
 
-1. 在 Root 管理器中刷入 `release/openclaw-pocket-offline-1.3.0.zip`：
+1. 在 Root 管理器中刷入 `release/openclaw-pocket-offline-1.3.1.zip`：
 
    - Magisk：模块 → 从本地安装
    - KernelSU / APatch：模块 → 安装本地模块
@@ -35,8 +36,8 @@
    也可以用 adb（仅 Magisk）：
 
    ```bash
-   adb push openclaw-pocket-offline-1.3.0.zip /data/local/tmp/
-   adb shell su -c 'magisk --install-module /data/local/tmp/openclaw-pocket-offline-1.3.0.zip'
+   adb push openclaw-pocket-offline-1.3.1.zip /data/local/tmp/
+   adb shell su -c 'magisk --install-module /data/local/tmp/openclaw-pocket-offline-1.3.1.zip'
    ```
 
    模块自带 busybox，KernelSU/APatch 下不依赖 `/data/adb/magisk/busybox`。安装过程会离线解压约 900 MB 运行时，通常 30–60 秒。
@@ -120,7 +121,21 @@ adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl lan off'
 
 模块升级默认保留 `/data/openclaw`；**卸载模块会自动停止网关、卸载挂载点，并删除 `/data/openclaw`（含配置、会话、日志、token）以及 `Download/openclaw-token.txt`。**
 
-安装完成后会自动用浏览器打开项目页：`https://dwz.liuyi.publicvm.com/openclaw-pocket`。
+安装完成后会先解析项目短链接的重定向目标，再用浏览器打开目标页：`https://dwz.liuyi.publicvm.com/openclaw-pocket`。
+
+## 模块“操作”按钮
+
+在 Magisk / KernelSU / APatch 的模块列表中，点击本模块的“操作 / Action”按钮会：
+
+1. 启动或唤醒网关
+2. 等待 `127.0.0.1:18789` 就绪（最多约 45 秒）
+3. 用浏览器打开带 token 的 Control UI
+
+对应脚本：
+
+```text
+/data/adb/modules/openclaw-pocket/action.sh
+```
 
 ## Android 兼容说明
 

@@ -6,9 +6,9 @@ mkdir -p release
 payload=".cache/rootfs.tar.xz"
 
 if [ -f "$payload" ]; then
-  out="release/openclaw-pocket-offline-1.3.0.zip"
+  out="release/openclaw-pocket-offline-1.3.1.zip"
 else
-  out="release/openclaw-pocket-1.3.0.zip"
+  out="release/openclaw-pocket-1.3.1.zip"
 fi
 rm -f "$out"
 
