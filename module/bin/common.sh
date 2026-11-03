@@ -12,8 +12,8 @@ PORT=18789
 
 detect_busybox() {
   for p in \
-    /data/adb/modules/openclaw-magisk/bin/busybox \
-    /data/adb/modules_update/openclaw-magisk/bin/busybox \
+    /data/adb/modules/openclaw/bin/busybox \
+    /data/adb/modules_update/openclaw/bin/busybox \
     /data/adb/ksu/bin/busybox \
     /data/adb/ap/bin/busybox \
     /data/adb/magisk/busybox; do
