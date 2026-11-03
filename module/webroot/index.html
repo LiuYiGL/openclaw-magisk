@@ -112,7 +112,7 @@
       <button id="btnStart">启动服务</button>
       <button id="btnStop">停止服务</button>
       <button id="btnRestart">重启服务</button>
-      <button id="btnOpen" class="primary">打开面板</button>
+      <button id="btnOpen" class="primary">进入面板</button>
     </section>
 
     <section class="card">
@@ -135,7 +135,7 @@
       <pre id="logs">点击“刷新”查看最近日志</pre>
     </section>
 
-    <p class="foot">“打开面板”会跳转到系统浏览器，并使用本机回环地址连接网关。</p>
+    <p class="foot">点击“进入面板”会在当前 WebUI 内显示 Control UI；系统返回键回到控制页。</p>
   </main>
 
   <div id="toast" class="toast"></div>
@@ -226,7 +226,6 @@
       }
 
       function refresh(silent) {
-        if (busy) return Promise.resolve(null);
         return run(CTRL + " webinfo").then(function (result) {
           var info = parseInfo(result.stdout);
           if (info.running !== undefined) {
@@ -250,6 +249,21 @@
           });
         }
         return step();
+      }
+
+      function navigate(url) {
+        try { history.pushState({ openclawPanel: 1 }, "", location.href); } catch (error) {}
+        window.location.href = url;
+      }
+
+      function enterPanel(url) {
+        var target = url || currentUrl;
+        if (!target) {
+          notify("暂无面板地址，请先启动服务");
+          return false;
+        }
+        navigate(target);
+        return true;
       }
 
       function action(fn) {
@@ -295,15 +309,7 @@
       });
 
       $("btnOpen").addEventListener("click", function () {
-        action(function () {
-          if (!currentUrl) {
-            notify("暂无面板地址，请先启动服务");
-            return;
-          }
-          return run("am start -a android.intent.action.VIEW -d '" + currentUrl + "'").then(function () {
-            notify("已请求打开浏览器");
-          });
-        });
+        enterPanel();
       });
 
       $("btnLanOn").addEventListener("click", function () {

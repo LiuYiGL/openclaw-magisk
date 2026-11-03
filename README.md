@@ -134,7 +134,7 @@ adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl lan off'
 
 - 查看运行状态、模块版本、上游版本和控制台地址
 - 启动、停止、重启网关
-- 打开带 token 的 Control UI
+- 在当前 WebUI 内显示带 token 的 Control UI（系统返回键回到控制页）
 - 查看最近 200 行网关日志
 - 开关局域网访问
 
