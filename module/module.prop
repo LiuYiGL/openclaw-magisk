@@ -1,6 +1,6 @@
 id=openclaw
 name=OpenClaw Gateway
-version=2026.10.9-android.9
-versionCode=9
+version=2026.10.9-android.10
+versionCode=10
 author=Liuyi
 description=Run the OpenClaw AI assistant Gateway on Android with a bundled offline Ubuntu arm64 runtime. Control UI at http://127.0.0.1:18789. Manage with openclawctl.

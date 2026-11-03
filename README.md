@@ -12,11 +12,12 @@
 
 ## 更新日志
 
+- **2026.10.9-android.10**：模块 ID 改为 `openclaw`，安装目录变为 `/data/adb/modules/openclaw`；从旧模块 `openclaw-magisk` 升级前请先卸载旧模块，避免两个模块同时启动。
 - **2026.10.9-android.9**：模块 ID 为 `openclaw`；版本号改为 `<上游版本>-android.<versionCode>`；新增 KernelSU/APatch WebUI（`webroot/`），可启动/停止/重启服务、打开面板、查看日志和切换局域网；移除旧的 `action.sh` 操作按钮。
 
 ## 版本号
 
-模块版本格式为 `<上游 OpenClaw 版本>-android.<versionCode>`，例如 `2026.10.9-android.9`。
+模块版本格式为 `<上游 OpenClaw 版本>-android.<versionCode>`，例如 `2026.10.9-android.10`。
 
 ## 环境要求
 
@@ -26,7 +27,7 @@
 
 ## 安装
 
-1. 在 Root 管理器中刷入 `release/openclaw-magisk-2026.10.9-android.9.zip`：
+1. 在 Root 管理器中刷入 `release/openclaw-magisk-2026.10.9-android.10.zip`：
 
    - Magisk：模块 → 从本地安装
    - KernelSU / APatch：模块 → 安装本地模块
@@ -34,11 +35,13 @@
    也可以用 adb（仅 Magisk）：
 
    ```bash
-   adb push openclaw-magisk-2026.10.9-android.9.zip /data/local/tmp/
-   adb shell su -c 'magisk --install-module /data/local/tmp/openclaw-magisk-2026.10.9-android.9.zip'
+   adb push openclaw-magisk-2026.10.9-android.10.zip /data/local/tmp/
+   adb shell su -c 'magisk --install-module /data/local/tmp/openclaw-magisk-2026.10.9-android.10.zip'
    ```
 
    模块自带 busybox，KernelSU/APatch 下不依赖 `/data/adb/magisk/busybox`。安装过程会离线解压约 900 MB 运行时，通常 30–60 秒。
+
+   > 从旧模块 `openclaw-magisk` 升级时，请先在 Root 管理器中卸载旧模块，再刷入本版本；否则两个模块会同时启动并争用 18789 端口。
 
 2. 重启手机（或执行 `openclawctl start`）。网关约 20–30 秒后就绪。
 
