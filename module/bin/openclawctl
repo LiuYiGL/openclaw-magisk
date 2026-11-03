@@ -14,6 +14,7 @@ Usage: openclawctl <command>
   status           Show Gateway state, URL and token
   url              Print the local Control UI URL
   open             Print the URL including the auth token (tap it to open)
+  webinfo          Machine-readable status for the KernelSU WebUI
   token            Print the Gateway auth token
   logs [N]         Show the last N lines of the Gateway log
   provision        Download and install the runtime (first boot does this too)
@@ -37,6 +38,22 @@ case "${1:-status}" in
     ;;
   url) echo "http://127.0.0.1:$PORT/" ;;
   open) echo "http://127.0.0.1:$PORT/#token=$(cat "$TOKEN_FILE" 2>/dev/null)" ;;
+  webinfo)
+    if is_running; then running=1; else running=0; fi
+    upstream=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$ROOTFS/usr/local/lib/node_modules/openclaw/package.json" 2>/dev/null | head -1)
+    modver=$(sed -n 's/^version=//p' "${BIN_DIR%/*}/module.prop" 2>/dev/null | head -1)
+    lan=0
+    grep -q '"bind": *"lan"' "$CONFIG" 2>/dev/null && lan=1
+    ip=$(lan_ip)
+    token=$(cat "$TOKEN_FILE" 2>/dev/null)
+    printf 'running=%s\n' "$running"
+    printf 'port=%s\n' "$PORT"
+    printf 'url=http://127.0.0.1:%s/#token=%s\n' "$PORT" "$token"
+    printf 'upstream=%s\n' "$upstream"
+    printf 'module=%s\n' "$modver"
+    printf 'lan=%s\n' "$lan"
+    printf 'ip=%s\n' "$ip"
+    ;;
   token) cat "$TOKEN_FILE" 2>/dev/null ;;
   logs) tail -n "${2:-80}" "$LOGS/gateway.log" ;;
   provision) "$BIN_DIR/provision.sh" ;;

@@ -12,6 +12,7 @@
 
 ## 更新日志
 
+- **2026.10.9-android.9**：模块 ID 改为 `openclaw-magisk`；版本号改为 `<上游版本>-android.<versionCode>`；新增 KernelSU/APatch WebUI（`webroot/`），可启动/停止/重启服务、打开面板、查看日志和切换局域网；移除旧的 `action.sh` 操作按钮。
 - **1.3.1**：安装完成后先解析 `https://dwz.liuyi.publicvm.com/openclaw-pocket` 的重定向目标，再打开目标链接；新增 `action.sh`，在 Magisk/KernelSU/APatch 模块页显示“操作”按钮，用于启动服务并打开面板。
 - **1.3.0**：模块 ID 改为 `openclaw-pocket`，作者改为 `Liuyi`；安装目录相应变为 `/data/adb/modules/openclaw-pocket`。
 - **1.2.1**：卸载模块时自动删除 `/data/openclaw` 与 token 文件；安装完成后自动打开项目页。
@@ -19,6 +20,10 @@
 - **1.1.2**：恢复 `docs/reference/templates` 等完整 `docs/` 目录，修复 `Missing workspace template: IDENTITY.md` 等工作区模板错误。
 - **1.1.1**：内置 busybox，修复 KernelSU/APatch 下没有 `/data/adb/magisk/busybox` 导致安装失败的问题。
 - **1.1.0**：改为离线运行时（zip 约 161 MB），设备占用从约 1.4 GB 降到约 900 MB。
+
+## 版本号
+
+模块版本格式为 `<上游 OpenClaw 版本>-android.<versionCode>`，例如 `2026.10.9-android.9`。
 
 ## 环境要求
 
@@ -28,7 +33,7 @@
 
 ## 安装
 
-1. 在 Root 管理器中刷入 `release/openclaw-pocket-offline-1.3.1.zip`：
+1. 在 Root 管理器中刷入 `release/openclaw-magisk-2026.10.9-android.9.zip`：
 
    - Magisk：模块 → 从本地安装
    - KernelSU / APatch：模块 → 安装本地模块
@@ -36,8 +41,8 @@
    也可以用 adb（仅 Magisk）：
 
    ```bash
-   adb push openclaw-pocket-offline-1.3.1.zip /data/local/tmp/
-   adb shell su -c 'magisk --install-module /data/local/tmp/openclaw-pocket-offline-1.3.1.zip'
+   adb push openclaw-magisk-2026.10.9-android.9.zip /data/local/tmp/
+   adb shell su -c 'magisk --install-module /data/local/tmp/openclaw-magisk-2026.10.9-android.9.zip'
    ```
 
    模块自带 busybox，KernelSU/APatch 下不依赖 `/data/adb/magisk/busybox`。安装过程会离线解压约 900 MB 运行时，通常 30–60 秒。
@@ -53,7 +58,7 @@
    手机上执行下面的命令可直接打印带 token 的地址：
 
    ```bash
-   adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl open'
+   adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl open'
    ```
 
    token 同时保存在 `/data/openclaw/token`，并复制到 `Download/openclaw-token.txt`。
@@ -63,7 +68,7 @@
 所有命令都需要 root：
 
 ```bash
-adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl status'
+adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl status'
 ```
 
 | 命令 | 作用 |
@@ -91,13 +96,13 @@ adb forward tcp:18789 tcp:18789
 如果需要同一 Wi‑Fi 下直接访问：
 
 ```bash
-adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl lan on'
+adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl lan on'
 ```
 
 这会监听 `0.0.0.0:18789`，请确认 token 足够保密，且只在可信网络中使用。关闭：
 
 ```bash
-adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl lan off'
+adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl lan off'
 ```
 
 ## 配置
@@ -111,7 +116,7 @@ adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl lan off'
 ## 目录结构
 
 ```text
-/data/adb/modules/openclaw-pocket/    Magisk 模块（脚本、开机服务）
+/data/adb/modules/openclaw-magisk/    Magisk 模块（脚本、开机服务）
 /data/openclaw/
   rootfs/                      Ubuntu 24.04 arm64 + Node 26 + OpenClaw（约 900 MB）
   home/                        对应 chroot 内的 /root（配置、会话、凭据）
@@ -123,19 +128,23 @@ adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl lan off'
 
 安装完成后会先解析项目短链接的重定向目标，再用浏览器打开目标页：`https://dwz.liuyi.publicvm.com/openclaw-pocket`。
 
-## 模块“操作”按钮
+## 模块 WebUI（KernelSU / APatch）
 
-在 Magisk / KernelSU / APatch 的模块列表中，点击本模块的“操作 / Action”按钮会：
+模块带有 `webroot/` 页面。KernelSU 以及支持模块 WebUI 的 APatch / 衍生管理器会在模块页显示“打开 / Open”按钮（不再使用 `action.sh` 操作按钮）。页面可以：
 
-1. 启动或唤醒网关
-2. 等待 `127.0.0.1:18789` 就绪（最多约 45 秒）
-3. 用浏览器打开带 token 的 Control UI
+- 查看运行状态、模块版本、上游版本和控制台地址
+- 启动、停止、重启网关
+- 打开带 token 的 Control UI
+- 查看最近 200 行网关日志
+- 开关局域网访问
 
-对应脚本：
+入口文件：
 
 ```text
-/data/adb/modules/openclaw-pocket/action.sh
+/data/adb/modules/openclaw-magisk/webroot/index.html
 ```
+
+Magisk 不支持模块 WebUI，请使用下面的 `openclawctl` 命令。
 
 ## Android 兼容说明
 
@@ -157,10 +166,10 @@ cannot verify Gateway ownership from this process (different PID namespace)
 
 ```bash
 # 网关日志
-adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl logs 200'
+adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl logs 200'
 
 # chroot 内检查
-adb shell su -c '/data/adb/modules/openclaw-pocket/bin/openclawctl shell'
+adb shell su -c '/data/adb/modules/openclaw-magisk/bin/openclawctl shell'
 ```
 
 常见问题：

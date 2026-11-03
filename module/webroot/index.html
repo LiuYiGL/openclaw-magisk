@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>OpenClaw Gateway</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --card: #161a22;
+      --card-2: #1d222c;
+      --line: #2a3140;
+      --text: #e8ecf3;
+      --muted: #8d98aa;
+      --accent: #ff7a45;
+      --accent-2: #ffa26b;
+      --ok: #3ddc97;
+      --off: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    }
+    main { max-width: 680px; margin: 0 auto; }
+    header { padding: 12px 4px 20px; }
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2);
+    }
+    .brand-mark {
+      width: 10px; height: 10px; border-radius: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 14px rgba(255, 122, 69, 0.55);
+    }
+    h1 { margin: 10px 0 4px; font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; }
+    .sub { margin: 0; color: var(--muted); font-size: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      padding: 16px; margin-bottom: 12px;
+    }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .status-row { gap: 10px; justify-content: flex-start; }
+    .dot {
+      width: 11px; height: 11px; border-radius: 50%; background: var(--off);
+      flex: 0 0 auto; transition: background 0.2s, box-shadow 0.2s;
+    }
+    .dot.on { background: var(--ok); box-shadow: 0 0 12px rgba(61, 220, 151, 0.6); }
+    .dot.off { background: var(--off); }
+    #state { font-size: 17px; font-weight: 600; }
+    .meta { color: var(--muted); font-size: 13px; margin-top: 8px; }
+    .url-label { color: var(--muted); font-size: 12px; margin: 14px 0 6px; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .url {
+      display: block; padding: 10px 12px; border-radius: 10px; background: var(--card-2);
+      border: 1px solid var(--line); color: var(--accent-2); font-size: 12px;
+      overflow-wrap: anywhere; user-select: all; -webkit-user-select: all;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    button {
+      appearance: none; border: 1px solid var(--line); background: var(--card-2);
+      color: var(--text); border-radius: 12px; padding: 13px 14px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      transition: transform 0.06s ease, border-color 0.15s, background 0.15s, opacity 0.15s;
+    }
+    button:active { transform: scale(0.98); }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent; color: #1b1207;
+    }
+    button.small { padding: 7px 12px; font-size: 12px; border-radius: 9px; }
+    button:disabled { opacity: 0.45; }
+    .section-title { font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.02em; }
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 10px 0 0; overflow-wrap: anywhere; }
+    #logs {
+      margin: 12px 0 0; padding: 12px; border-radius: 10px; background: #0b0d11;
+      border: 1px solid var(--line); color: #b9c4d4; font-size: 11px; line-height: 1.5;
+      max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .foot { color: var(--muted); font-size: 11px; line-height: 1.6; text-align: center; padding: 8px 12px 0; }
+    .toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+      background: #262c38; color: var(--text); border: 1px solid var(--line);
+      border-radius: 999px; padding: 10px 16px; font-size: 13px;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s; max-width: 86vw;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand"><span class="brand-mark"></span>OpenClaw</div>
+      <h1>OpenClaw Gateway</h1>
+      <p class="sub">Android 上的常驻 AI 助手网关</p>
+    </header>
+
+    <section class="card">
+      <div class="row status-row">
+        <span id="dot" class="dot off"></span>
+        <span id="state">读取中…</span>
+      </div>
+      <div class="meta">模块 <span id="moduleVer">—</span> · 上游 <span id="upstreamVer">—</span></div>
+      <div class="url-label">控制台地址</div>
+      <code id="panelUrl" class="url">—</code>
+    </section>
+
+    <section class="card grid">
+      <button id="btnStart">启动服务</button>
+      <button id="btnStop">停止服务</button>
+      <button id="btnRestart">重启服务</button>
+      <button id="btnOpen" class="primary">打开面板</button>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <span class="section-title">局域网访问</span>
+        <span id="lanState" class="meta" style="margin:0">—</span>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <button id="btnLanOn">开启</button>
+        <button id="btnLanOff">关闭</button>
+      </div>
+      <p class="hint" id="lanHint">开启后同一 Wi-Fi 下的设备可访问 18789 端口。</p>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <span class="section-title">网关日志</span>
+        <button id="btnLogs" class="small">刷新</button>
+      </div>
+      <pre id="logs">点击“刷新”查看最近日志</pre>
+    </section>
+
+    <p class="foot">“打开面板”会跳转到系统浏览器，并使用本机回环地址连接网关。</p>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    (function () {
+      var CTRL = "/data/adb/modules/openclaw-magisk/bin/openclawctl";
+      var currentUrl = "";
+      var busy = false;
+
+      function $(id) { return document.getElementById(id); }
+
+      function notify(message) {
+        try {
+          if (window.ksu && typeof ksu.toast === "function") {
+            ksu.toast(String(message));
+            return;
+          }
+        } catch (error) {}
+        var el = $("toast");
+        if (!el) return;
+        el.textContent = String(message);
+        el.className = "toast show";
+        clearTimeout(el._timer);
+        el._timer = setTimeout(function () { el.className = "toast"; }, 2200);
+      }
+
+      function kexec(command) {
+        return new Promise(function (resolve, reject) {
+          if (!window.ksu || typeof ksu.exec !== "function") {
+            reject(new Error("KernelSU WebUI API is not available"));
+            return;
+          }
+          var name = "oc_cb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+          window[name] = function (errno, stdout, stderr) {
+            delete window[name];
+            resolve({ errno: errno, stdout: stdout, stderr: stderr });
+          };
+          try {
+            ksu.exec(command, "{}", name);
+          } catch (error) {
+            delete window[name];
+            reject(error);
+          }
+        });
+      }
+
+      function setBusy(value) {
+        busy = value;
+        ["btnStart", "btnStop", "btnRestart", "btnOpen", "btnLanOn", "btnLanOff", "btnLogs"].forEach(function (id) {
+          var el = $(id);
+          if (el) el.disabled = value;
+        });
+      }
+
+      function run(command) {
+        return kexec(command).then(function (result) {
+          if (result && result.errno !== 0 && result.stderr) {
+            notify(String(result.stderr).trim().slice(0, 180));
+          }
+          return result || { errno: -1, stdout: "", stderr: "" };
+        });
+      }
+
+      function parseInfo(text) {
+        var info = {};
+        String(text || "").split("\n").forEach(function (line) {
+          var pos = line.indexOf("=");
+          if (pos > 0) info[line.slice(0, pos)] = line.slice(pos + 1);
+        });
+        return info;
+      }
+
+      function render(info) {
+        var running = info.running === "1";
+        $("dot").className = "dot " + (running ? "on" : "off");
+        $("state").textContent = running ? "运行中" : "已停止";
+        $("moduleVer").textContent = info.module || "—";
+        $("upstreamVer").textContent = info.upstream || "—";
+        $("panelUrl").textContent = info.url || "—";
+        currentUrl = info.url || "";
+
+        var lan = info.lan === "1";
+        $("lanState").textContent = lan ? "已开启" : "仅本机";
+        $("lanHint").textContent = lan && info.ip
+          ? "局域网地址：http://" + info.ip + ":18789/"
+          : "开启后同一 Wi-Fi 下的设备可访问 18789 端口。";
+      }
+
+      function refresh(silent) {
+        if (busy) return Promise.resolve(null);
+        return run(CTRL + " webinfo").then(function (result) {
+          var info = parseInfo(result.stdout);
+          if (info.running !== undefined) {
+            render(info);
+            return info;
+          }
+          return null;
+        }).catch(function (error) {
+          if (!silent) notify(String(error).slice(0, 180));
+          return null;
+        });
+      }
+
+      function waitUntilRunning(timeoutMs) {
+        var started = Date.now();
+        function step() {
+          if (Date.now() - started >= timeoutMs) return Promise.resolve(false);
+          return refresh(true).then(function (info) {
+            if (info && info.running === "1") return true;
+            return new Promise(function (resolve) { setTimeout(resolve, 2000); }).then(step);
+          });
+        }
+        return step();
+      }
+
+      function action(fn) {
+        if (busy) return;
+        setBusy(true);
+        Promise.resolve().then(fn).catch(function (error) {
+          notify(String(error).slice(0, 180));
+        }).then(function () {
+          return refresh(true);
+        }).then(function () {
+          setBusy(false);
+        });
+      }
+
+      $("btnStart").addEventListener("click", function () {
+        action(function () {
+          notify("正在启动服务…");
+          return run(CTRL + " start").then(function () {
+            return waitUntilRunning(60000);
+          }).then(function (ok) {
+            notify(ok ? "服务已启动" : "仍在启动，请稍后刷新");
+          });
+        });
+      });
+
+      $("btnStop").addEventListener("click", function () {
+        action(function () {
+          return run(CTRL + " stop").then(function () { notify("服务已停止"); });
+        });
+      });
+
+      $("btnRestart").addEventListener("click", function () {
+        action(function () {
+          notify("正在重启服务…");
+          return run(CTRL + " stop").then(function () {
+            return run(CTRL + " start");
+          }).then(function () {
+            return waitUntilRunning(60000);
+          }).then(function (ok) {
+            notify(ok ? "服务已重启" : "仍在启动，请稍后刷新");
+          });
+        });
+      });
+
+      $("btnOpen").addEventListener("click", function () {
+        action(function () {
+          if (!currentUrl) {
+            notify("暂无面板地址，请先启动服务");
+            return;
+          }
+          return run("am start -a android.intent.action.VIEW -d '" + currentUrl + "'").then(function () {
+            notify("已请求打开浏览器");
+          });
+        });
+      });
+
+      $("btnLanOn").addEventListener("click", function () {
+        action(function () {
+          notify("正在开启局域网访问…");
+          return run(CTRL + " lan on").then(function () {
+            return waitUntilRunning(60000);
+          }).then(function () { notify("局域网访问已开启"); });
+        });
+      });
+
+      $("btnLanOff").addEventListener("click", function () {
+        action(function () {
+          notify("正在关闭局域网访问…");
+          return run(CTRL + " lan off").then(function () {
+            return waitUntilRunning(60000);
+          }).then(function () { notify("已恢复仅本机访问"); });
+        });
+      });
+
+      $("btnLogs").addEventListener("click", function () {
+        action(function () {
+          return run(CTRL + " logs 200").then(function (result) {
+            var el = $("logs");
+            el.textContent = result.stdout || "暂无日志";
+            el.scrollTop = el.scrollHeight;
+          });
+        });
+      });
+
+      function boot() {
+        if (!window.ksu || typeof ksu.exec !== "function") {
+          $("state").textContent = "请从 KernelSU/APatch 模块页打开";
+          $("dot").className = "dot off";
+          setBusy(true);
+          return;
+        }
+        setBusy(true);
+        refresh(true).then(function () { setBusy(false); });
+        setInterval(function () { refresh(true); }, 15000);
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") refresh(true);
+        });
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>

@@ -2,14 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+version=$(sed -n 's/^version=//p' module/module.prop | head -1)
+[ -n "$version" ] || { echo "error: module version not found" >&2; exit 1; }
+
 mkdir -p release
 payload=".cache/rootfs.tar.xz"
-
-if [ -f "$payload" ]; then
-  out="release/openclaw-pocket-offline-1.3.1.zip"
-else
-  out="release/openclaw-pocket-1.3.1.zip"
-fi
+out="release/openclaw-magisk-${version}.zip"
 rm -f "$out"
 
 stage=$(mktemp -d)
